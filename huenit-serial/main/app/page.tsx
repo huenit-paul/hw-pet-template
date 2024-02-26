@@ -16,20 +16,26 @@ export default function Page() {
 
   const [commandRunner, setCommandRunner] = useState<CommandRunner>()
 
+    const [port, setPort] = useState(null)
     const connectSerial = async () => {
         try {
-            const port = await navigator.serial.requestPort()
+            setConnectionState('connecting');
+            // const newPort = await navigator.serial.requestPort();
+            const port = await navigator.serial.requestPort();
 
-            console.log('port_name: ', port)
-            await port.open({ baudRate: 115200 })
-            // setPort(port)
+            console.log('port_name : ', port);
+            // await newPort.open({ baudRate: 115200 });
+            await port.open({ baudRate: 115200 });
+            // setPort(newPort);
             if (commandRunner){
-              commandRunner.setPort(port);
+                commandRunner.setPort(port);
+                setConnectionState('connected');
             }
             // 이제 원하는 작업 수행
             // port 을 사용하여 데이터를 전송하거나 수신할 수 있음
         } catch (error) {
-            console.error('Error connecting to serial port:', error)
+            console.error('Error connecting to serial port:', error);
+            setConnectionState('disconnected');
         }
     };
 
@@ -43,13 +49,17 @@ export default function Page() {
   }
 
   // Click handler for the Disconnect button
-  const handleClickDisconnectBtn = () => {
-    const runner = commandRunner
-    if (!runner) {
-      return
-    }
-    runner.disconnect()
-  }
+    const handleClickDisconnectBtn = async () => {
+        try {
+            if (port) {
+                await port.close();
+            }
+            setPort(null);
+            setConnectionState('disconnected');
+        } catch (error) {
+            console.error('Error disconnecting from serial port:', error);
+        }
+    };
 
 
 
